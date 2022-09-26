@@ -38,4 +38,8 @@ public class Constant {
 
 
     public static String DOT = ".";
+    public static String KPI_DEV_FILE_NAME = "KPI-DEV.xlsx";
+    public static String KPI_TEST_FILE_NAME = "KPI-TEST.xlsx";
+    public static String EXPORT_KPI_DEV_FILE_NAME = "EXPORT_KPI_DEV.xlsx";
+    public static String EXPORT_KPI_TEST_FILE_NAME = "EXPORT_KPI_TEST.xlsx";
 }

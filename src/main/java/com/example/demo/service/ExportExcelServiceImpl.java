@@ -1,7 +1,12 @@
 package com.example.demo.service;
 
+import com.example.demo.dto.ColumnProperties;
 import com.example.demo.dto.KpiEmployee;
+import com.example.demo.dto.RowProperties;
+import com.example.demo.utils.CommonResource;
 import com.example.demo.utils.Constant;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -19,18 +24,23 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ExportExcelServiceImpl implements ExportExcelService {
 
+    private final CommonResource commonResource;
+    private ObjectMapper objectMapper = new ObjectMapper();
+
+
     HashMap<Integer, XSSFCellStyle> styleExcelDev = new HashMap<>();
     HashMap<Integer, XSSFCellStyle> styleExcelTest = new HashMap<>();
 
-    public void createExcel(String employeeKpiFilePath) throws IOException {
+    public void createExcel(String empKpiPath) throws IOException {
         List<KpiEmployee> kpiEmployees = new ArrayList<>();
         List<KpiEmployee> kpiTest = new ArrayList<>();
 
-        loadKpiEmployees(kpiEmployees, kpiTest, employeeKpiFilePath);
+        loadKpiEmployees(kpiEmployees, kpiTest, empKpiPath);
         createKpi(kpiEmployees, Constant.PositionEmployee.DEV.getType());
         createKpi(kpiTest, Constant.PositionEmployee.TESTER.getType());
         log.info("Generate excel successfully");
     }
+
 
     private void loadKpiEmployees(List<KpiEmployee> kpiEmployees, List<KpiEmployee> kpiTest, String employeeKpiFilePath) throws IOException {
 
@@ -55,6 +65,7 @@ public class ExportExcelServiceImpl implements ExportExcelService {
     }
 
     private void createKpi(List<KpiEmployee> kpiEmployees, Integer typePosition) {
+        // sort
         kpiEmployees = kpiEmployees.stream()
                 .sorted(Comparator.comparing(KpiEmployee::getKpi))
                 .collect(Collectors.toList());
@@ -63,11 +74,11 @@ public class ExportExcelServiceImpl implements ExportExcelService {
         try {
             // pre-process
             if (Constant.PositionEmployee.DEV.getType().equals(typePosition)) {
-                in = this.getClass().getResourceAsStream("/excel/KPI-DEV.xlsx");
-                out = new FileOutputStream(new File("C:\\Users\\admin\\Downloads\\KPI_DEV.xlsx"));
+                in = new FileInputStream(new File(commonResource.getExportFolderPath() + Constant.KPI_DEV_FILE_NAME));
+                out = new FileOutputStream(new File(commonResource.getExportFolderPath() + System.currentTimeMillis() + "_" + Constant.EXPORT_KPI_DEV_FILE_NAME));
             } else if (Constant.PositionEmployee.TESTER.getType().equals(typePosition)) {
-                in = this.getClass().getResourceAsStream("/excel/KPI-TEST.xlsx");
-                out = new FileOutputStream(new File("C:\\Users\\admin\\Downloads\\KPI_TEST.xlsx"));
+                in = new FileInputStream(new File(commonResource.getExportFolderPath() + Constant.KPI_TEST_FILE_NAME));
+                out = new FileOutputStream(new File(commonResource.getExportFolderPath() + System.currentTimeMillis() + "_" + Constant.EXPORT_KPI_TEST_FILE_NAME));
             }
 
             XSSFWorkbook sourceWorkbook = new XSSFWorkbook(in);
@@ -100,6 +111,8 @@ public class ExportExcelServiceImpl implements ExportExcelService {
                 for (int i = sourceSheet.getFirstRowNum(); i < sourceSheet.getLastRowNum(); i++) {
                     copyRow(sourceSheet.getRow(i), destWorksheet, destinationWorkbook, sourceSheet, employee, typePosition);
                 }
+                setColumnWidth(destWorksheet);
+                setRowHeight(destWorksheet);
 
                 // Each employee will correspond to one version sheet
                 version++;
@@ -107,10 +120,30 @@ public class ExportExcelServiceImpl implements ExportExcelService {
 
             //Write the workbook in file system
             destinationWorkbook.write(out);
+            sourceWorkbook.close();
+            destinationWorkbook.close();
+            in.close();
             out.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void setRowHeight(XSSFSheet destWorksheet) throws IOException {
+        List<RowProperties> rows = objectMapper.readValue(this.getClass().getResourceAsStream("/row-info.txt"), new TypeReference<List<RowProperties>>() {
+        });
+        for (RowProperties row : rows) {
+            destWorksheet.getRow(row.getIndex()).setHeight(row.getHeight().shortValue());
+        }
+    }
+
+    private void setColumnWidth(XSSFSheet destWorksheet) throws IOException {
+        List<ColumnProperties> columns = objectMapper.readValue(this.getClass().getResourceAsStream("/column-info.txt"), new TypeReference<List<ColumnProperties>>() {
+        });
+        for (ColumnProperties columnProperties : columns) {
+            destWorksheet.setColumnWidth(columnProperties.getIndex(), columnProperties.getWidth() * 50);
+        }
+
     }
 
     public void copyRow(XSSFRow sourceRow, XSSFSheet destinationSheet, XSSFWorkbook destinationWorkbook, XSSFSheet sourceSheet, KpiEmployee employee, Integer typePosition) {
@@ -171,6 +204,7 @@ public class ExportExcelServiceImpl implements ExportExcelService {
             if (CellType.STRING.equals(oldCell.getCellType()) && StringUtils.equals(oldCell.getStringCellValue(), "employee")) {
                 newCell.setCellValue(employee.getNameEmp());
             }
+//            newRow.setHeight((short) 2000);
         }
 
 
