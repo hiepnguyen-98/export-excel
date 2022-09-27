@@ -1,6 +1,7 @@
 package com.example.demo.excel;
 
 import com.example.demo.service.ExportExcelService;
+import com.example.demo.utils.Constant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -52,11 +53,11 @@ public class ExcelExport {
                 } else {
                     String pathFile = file.getAbsolutePath();
                     try {
-                        exportExcelService.createExcel(pathFile);
+                        exportExcelService.createExcel(pathFile, file.getParent());
                     } catch (IOException ioException) {
                         log.error("Create excel failed: {}", ioException.getMessage());
                     }
-                    label.setText("File name: " + file.getName() + "  , File path: " + pathFile);
+                    label.setText("File name: " + Constant.KPI_DEV_FILE_NAME + " , " + Constant.KPI_TEST_FILE_NAME + "  , File path: " + file.getParent());
                 }
 
             } else {

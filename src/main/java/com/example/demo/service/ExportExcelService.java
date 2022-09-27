@@ -4,5 +4,5 @@ import java.io.IOException;
 
 public interface ExportExcelService {
 
-    void createExcel(String empKpiPath) throws IOException;
+    void createExcel(String empKpiPath, String folderPath) throws IOException;
 }

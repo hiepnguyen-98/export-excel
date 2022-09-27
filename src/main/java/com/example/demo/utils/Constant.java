@@ -42,4 +42,6 @@ public class Constant {
     public static String KPI_TEST_FILE_NAME = "KPI-TEST.xlsx";
     public static String EXPORT_KPI_DEV_FILE_NAME = "EXPORT_KPI_DEV.xlsx";
     public static String EXPORT_KPI_TEST_FILE_NAME = "EXPORT_KPI_TEST.xlsx";
+    public static String COLUMN_SIZE_FILE_NAME = "column-info.txt";
+    public static String ROW_SIZE_FILE_NAME = "row-info.txt";
 }
